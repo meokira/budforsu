@@ -117,6 +117,29 @@ jobs:
             unzip clang.zip -d clang-aosp/
         fi
 
+    - name: Setup PATH for Toolchains
+      run: |
+        # Clang PATH (always, unless custom GCC overrides)
+        if [ -d "$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin" ]; then
+            echo "CLANG_PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin" >> $GITHUB_ENV
+            echo "$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin" >> $GITHUB_PATH
+        fi
+        # GCC 64 PATH (if enabled)
+        if [ -n "$GCC_64" ] && [ -d "$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin" ]; then
+            echo "$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin" >> $GITHUB_PATH
+        fi
+        # GCC 32 PATH (if enabled)
+        if [ -n "$GCC_32" ] && [ -d "$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin" ]; then
+            echo "$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin" >> $GITHUB_PATH
+        fi
+        # Verify Clang
+        if command -v clang &> /dev/null; then
+            echo "Clang found: $(clang --version | head -n1)"
+        else
+            echo "Error: Clang not in PATH!"
+        exit 1
+        fi
+
     - name: Download Gcc-aosp
       if: env.USE_CUSTOM_GCC_64 != 'true' || env.USE_CUSTOM_GCC_32 != 'true'
       run: |
